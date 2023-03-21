@@ -1,6 +1,3 @@
-#!/usr/bin/python
-# -*- coding: UTF-8 -*-
-
 '''
 NAME
     NetCDF with Python
@@ -12,6 +9,8 @@ PROGRAMMER(S)
     Chris Slocum
     Jhonatan M. 
 REVISION HISTORY
+    20230321 -- Modified to used in python 3.9 
+    20220623 -- Modified to used in the tutorial  
     20140320 -- Initial version created and posted online
     20140722 -- Added basic error handling to ncdump
                 Thanks to K.-Michael Aye for highlighting the issue
@@ -38,7 +37,7 @@ import datetime as dt
 
 #Importa a funcao ncdump, que imprimir no terminal
 #as variaveis e informacoes dos .nc files
-#from  info_ncfiles import ncdump
+from  ncdump import ncdump
 
 #Importa biblioteca necessarias  para fazer mapas, 
 #entre ela o basemap
@@ -63,7 +62,9 @@ nc_fid = Dataset(nc_f, 'r')
 #Informacoes, como: nome das variaveis no arquivo, dimensoes..
 #referencia temporal, entre outros...
 #nc_atributos, nc_dimensoes, nc_variaveis=ncdump(array of data)
-#nc_attrs, nc_dims, nc_vars = ncdump(nc_fid)
+nc_attrs, nc_dims, nc_vars = ncdump(nc_fid)
+
+#exit()
 
 #As informacoes estraidas do arquivo pela funcao ncdump 
 #sao necessarias para saber que variavies serao 
@@ -142,9 +143,8 @@ fig = plt.figure()
 fig.subplots_adjust(left=0., right=1., bottom=0., top=0.9)
 
 #Determina que projecao vai ser usada. 
-#proj = ccrs.PlateCarree() 
-proj = 'moll'
 #proj  = 'cyl'
+proj = 'moll'
 #proj  = 'robin'
 
 #Define os intervalos  das latitudes a ser plotadas (-90,90)
@@ -153,21 +153,37 @@ lat_i =  -90.0
 #limite superior latitude
 lat_f =   90.0
 
+
 #Definem os intervalos das longitudes a ser plotadas (0,360)
 #limite inferior longitude
-lon_i =  -180.0 
+#lon_i =  0 
 #limite superior longitude
-lon_f =  180.0
+#lon_f =  360
+
+#lon_i =  -90 
+#lon_f =  270
+
+lon_i =  -180.0 
+lon_f =   180.0
+
+#lon_i =  -270.0 
+#lon_f =   90.0
+
+
 
 #Abre um mapa, siguindo os limites das latitude e longitude 
 #usando a projecao escolhida.
 #Para outras opcoes:
 #https://matplotlib.org/basemap/api/basemap_api.html
-m = Basemap(projection=proj, llcrnrlat=lat_i, urcrnrlat=lat_f,\
-            llcrnrlon=lon_i, urcrnrlon=lon_f, resolution='c', lon_0=180)
 
-#m = Basemap(projection='moll', llcrnrlat=-90, urcrnrlat=90,\
-#            llcrnrlon=0, urcrnrlon=360, resolution='c', lon_0=0)
+#m = Basemap(projection='cyl', llcrnrlat=lat_i, urcrnrlat=lat_f,\
+#            llcrnrlon=lon_i, urcrnrlon=lon_f, resolution='c')
+
+#m = Basemap(projection='moll', llcrnrlat=lat_i, urcrnrlat=lat_f,\
+#            llcrnrlon=lon_i, urcrnrlon=lon_f, resolution='c', lon_0=0)
+
+m = Basemap(projection='robin', llcrnrlat=lat_i, urcrnrlat=lat_f,\
+            llcrnrlon=lon_i, urcrnrlon=lon_f, resolution='c', lon_0=0)
 
 #Para plotar as linhas dos continentes no basemap de nome m
 m.drawcoastlines()
@@ -200,7 +216,10 @@ air_cyclic, lons_cyclic = addcyclic(air[index, :, :], lons[:])
 #Move os limites da malha para adaptar ao limites escolhidos.
 #Neste caso foi defido de -180 a 180, para o formato 0 a 360.
 
-air_cyclic, lons_cyclic = shiftgrid(180., air_cyclic, lons_cyclic, start=False)
+#air_cyclic, lons_cyclic = shiftgrid(360, air_cyclic, lons_cyclic, start=False)
+#air_cyclic, lons_cyclic = shiftgrid(270, air_cyclic, lons_cyclic, start=False)
+air_cyclic, lons_cyclic = shiftgrid(180, air_cyclic, lons_cyclic, start=False)
+#air_cyclic, lons_cyclic = shiftgrid(90, air_cyclic, lons_cyclic, start=False)
 
 # Crea array 2D da grade em formato lat/lon  para o Basemap 
 # fazer o mapa 
@@ -211,20 +230,21 @@ lon2d, lat2d = np.meshgrid(lons_cyclic, lats[:])
 x, y = m(lon2d, lat2d)
 
 
-#Define o vetor com os valores dos contornos 
-#desejados a plota
-#v=[220 até 320, com 11 elementos]
+#Define un vetor com 11 componentes, desde 220 ate 320
 v = np.linspace(220, 320, 11, endpoint=True)
 
-#Cria o plot de contorno da variavel air_cyclic.
-#e atuliza a figura que estava aberta.
+#Plota os contornos da variavel escolhada, usando 11 intervalos
+#para os contornos, usando a distribuicao do vetor  v  
+
 cs = m.contourf(x, y, air_cyclic, v, cmap='RdBu_r', extend='both')
 
+#Coloca a barra de cores em formato horizontal  
+#encolhendo esta 50% para o grafico de contorno
+#denifindo como cs (passo anterior)
+#cbar = plt.colorbar(cs, orientation='horizontal', shrink=0.5)
 
-#Cria a barra de cores usando o vector v para 
-#definir os limites, neste casso a barra é horizontal e 
-#esta escalada, (shrink=0.5). 
 cbar = plt.colorbar(cs,ticks=v,orientation='horizontal',shrink=0.5)
+
 
 #Coloca outras informacoes disponives para cada variavel como 
 #descripcao=var_desc e unidades  na barra de cores.     
@@ -244,3 +264,5 @@ fig.savefig('temp_brasil.png', dpi=1000)
 #um arquivo  .png
 plt.show()
 
+# Close original NetCDF file.
+nc_fid.close()
