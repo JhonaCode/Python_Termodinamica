@@ -1,5 +1,9 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
+#Estas duas linhas permitem escrever
+#em português dentro do código, colocando 
+#acentos e letras não disponíveis em inglês.
+#para isso usamos a formatação UTF-8
 
 '''
 NAME
@@ -12,7 +16,7 @@ PROGRAMMER(S)
     Chris Slocum
     Jhonatan Aguire
 REVISION HISTORY
-    20220623 -- Modified to used in the tutorial  
+    20220623 -- Modified to used in the tutorial
     20140320 -- Initial version created and posted online
     20140722 -- Added basic error handling to ncdump
                 Thanks to K.-Michael Aye for highlighting the issue
@@ -24,68 +28,77 @@ REFERENCES
 
 ##Carregando as bibliotecas que serão usadas no programa
 
-#Importa a biblioteca numpy, que contem funções  úteis 
-#como: mean, abs, sqrt, entre outras.  
+#Importa a biblioteca numpy, que contem funções  úteis
+#como: mean, abs, sqrt, entre outras.
 import numpy as np
 
-#Importa o Dateset, que permite  a leitura  de .nc arquivos. 
-from netCDF4 import Dataset 
+#Importa o Dateset, que permite  a leitura  de .nc arquivos.
+from netCDF4 import Dataset
 
-#Importa a biblioteca matplolib.pyplot para usar 
-#funcoes para realizar gráficos. 
+#Importa a biblioteca matplolib.pyplot para usar
+#funcoes para realizar gráficos.
 import matplotlib.pyplot as plt
 
-# Importa a biblioteca datatime para trabalhar com datas no python. 
-import datetime as dt  
+# Importa a biblioteca datatime para trabalhar com datas no python.
+import datetime as dt
+
+#Importa a função do datetime que permite tranformar
+#as datas.
+from netCDF4 import num2date,date2num
 
 
-#Nome do arquivo a ser carregado. 
-nc_f = './ncfiles/air.sig995.2012.nc' 
+#Nome do arquivo a ser carregado.
+nc_f = './ncfiles/air.sig995.2012.nc'
 
-#Dataset: Função do netCD4 para leer  e carregar  um  arquivo .nc  
-#como uma clase em python.  
+#Dataset: Função do netCD4 para leer  e carregar  um  arquivo .nc
+#como uma clase em python.
 #COmo funciona:
 #nome do array criado = Dataset(nome do arquivo, modo leitura('r')')
-nc_fid = Dataset(nc_f, 'r') 
+nc_fid = Dataset(nc_f, 'r')
 
-#Descomente para ver as informações do arquivo 
+#Descomente para ver as informações do arquivo
 #nc_attrs, nc_dims, nc_vars = ncdump(nc_fid)
 
-#As informações estraidas do arquivo pela função ncdump 
-#são necessarias para saber que variáveis serão 
-#extraidas da clase  para trabalhar com elas. 
+#As informações estraidas do arquivo pela função ncdump
+#são necessarias para saber que variáveis serão
+#extraidas da clase  para trabalhar com elas.
 #Neste caso o arquivo tem 3 dimensoes (time, lat, lon)
-#e uma variavel air que contem a temperatura para o ano de 2012.  
+#e uma variavel air que contem a temperatura para o ano de 2012.
 
-#Para estrair as variveis basta pegar da clase 
+#Para estrair as variveis basta pegar da clase
 #creada nc_fic  o nome da variavel e atribur o nome desejado
-#para trabalhar com ela assim: 
+#para trabalhar com ela assim:
 
-lats = nc_fid.variables['lat'][:]  
+lats = nc_fid.variables['lat'][:]
 lons = nc_fid.variables['lon'][:]
 time = nc_fid.variables['time'][:]
-air  = nc_fid.variables['air'][:]  
+air  = nc_fid.variables['air'][:]
 
 
-#Escolha um dia do arquivo, em numero. 
-time_idx = 237  # some random day in 2012
+#Escolha um dia qualquer do arquivo, em número.
+time_idx = 237  
 
-#A funao dt.timedelta (dt foi  nome dado a biblioteca do Python 
-#datetime importando) permite criar um delta de tempo 
-# que pode ser facilmente estraido ou adicionado as datas que 
+#A funao dt.timedelta (dt foi  nome dado a biblioteca do Python
+#datetime importando) permite criar um delta de tempo
+# que pode ser facilmente estraido ou adicionado as datas que
 #serao criadas.
 
 offset = dt.timedelta(hours=48)
 
-# Laço para criação do vector de datas  
+# Laço para criação do vector de datas
 dt_time = [dt.date(1, 1, 1) + dt.timedelta(hours=t) - offset\
            for t in time]
 
-# Data em formato de tempo do dia timex_index escolhido. 
+data_units='hours since 1-1-1 00:00:0.0'
+data_calendar='gregorian'
+
+dt_time2= num2date(time,units=data_units, calendar=data_calendar)
+
+# Data em formato de tempo do dia timex_index escolhido.
 cur_time = dt_time[time_idx]
 
 
-#Uso de um diccionario em python. 
+#Uso de um diccionario em python.
 #Veja diccionarios
 
 cp     = {'name': 'Cachoeira Paulista, Brazil', 'lat': -22.39, 'lon': -45}
@@ -100,21 +113,21 @@ lat_idx = np.abs(lats - cp['lat']).argmin()
 lon_idx = np.abs(lons - cp['lon']).argmin()
 
 
-###Outra lat lon para outro local 
+###Outra lat lon para outro local
 lat_idx2 = np.abs(lats - dw['lat']).argmin()
 lon_idx2 = np.abs(lons - dw['lon']).argmin()
 
 ##########################################################
-# Abre um figura no Python e assigna o nome fig  
-# Nessa figura e onde o mapa sera gerado e modificado 
+# Abre um figura no Python e assigna o nome fig
+# Nessa figura e onde o mapa sera gerado e modificado
 fig = plt.figure()
 
 #para plotar todos os tempos no local definido
-#no primeiro diccionario 
+#no primeiro diccionario
 plt.plot(dt_time, air[:, lat_idx, lon_idx], c='r', marker = '')
 
 #para plotar todos os tempos no local definido
-#no segundo  diccionario 
+#no segundo  diccionario
 plt.plot(dt_time, air[:, lat_idx2, lon_idx2], c='r')
 
 #Para escolher um dia  específico definido por time_idx
@@ -123,7 +136,7 @@ plt.plot(dt_time[time_idx], air[time_idx, lat_idx, lon_idx], c='b', marker='o')
 plt.plot(dt_time[time_idx], air[time_idx, lat_idx2, lon_idx2], c='b', marker='o')
 
 
-#Coloca a data no ponto escolhido. 
+#Coloca a data no ponto escolhido.
 #plt.tex(x,y,'texto','ha=alinhamento horizontal')
 plt.text(dt_time[time_idx], air[time_idx, lat_idx, lon_idx], '%s_%s'%(cur_time,cp['name']),\
          ha='right')
@@ -132,7 +145,7 @@ plt.text(dt_time[time_idx], air[time_idx, lat_idx2, lon_idx2], '%s_%s'%(cur_time
          ha='right')
 
 
-#Para colocar o eixo  x com as datas em formato diagonal 
+#Para colocar o eixo  x com as datas em formato diagonal
 fig.autofmt_xdate()
 
 #Descripção do eixo y
@@ -141,7 +154,7 @@ plt.ylabel("%s (%s)" % (nc_fid.variables['air'].var_desc,\
 #Descripção do eixo x
 plt.xlabel("Time")
 
-#Título do gráfico, usando as infomações do arquivo .nc 
+#Título do gráfico, usando as infomações do arquivo .nc
 
 plt.title("%s from\n%s for %s" % (nc_fid.variables['air'].var_desc,\
                                   cp['name'], cur_time.year))
@@ -155,4 +168,3 @@ plt.show()
 
 # fechar o arquivo original NetCDF.
 nc_fid.close()
-
